@@ -18,58 +18,88 @@
 # limitations under the License.
 #
 
-if Chef::Config[:solo]
-  return Chef::Log.warn('This recipe uses search. Chef Solo does not support search.')
-end
+deployer = data_bag_item('deployers', 'default')
 
 # GRP deploy
-group node['deployer']['group'] do
+group deployer['group'] do
+  action    :create
   gid       5000
 end
 
 # USER deploy
-user node['deployer']['user'] do
+user deployer['user'] do
   comment   'The deployment user'
   uid       5000
-  gid       5000
+  gid       deployer['group']
   shell     '/bin/bash'
-  home      node['deployer']['home']
+  home      deployer['home']
   supports  :manage_home => true
 end
 
 # SUDO deploy
-sudo node['deployer']['user'] do
-  user      node['deployer']['user']
-  group     node['deployer']['group']
+sudo deployer['user'] do
+  user      deployer['user']
+  group     deployer['group']
   commands  ['ALL']
   host      'ALL'
   nopasswd  true
 end
 
 # DIR /home/deploy/.ssh
-directory "#{node['deployer']['home']}/.ssh" do
-  owner     node['deployer']['user']
-  group     node['deployer']['group']
+directory "#{deployer['home']}/.ssh" do
+  owner     deployer['user']
+  group     deployer['group']
   mode      '0700'
   recursive true
 end
 
-# SEL users and deployers that can deploy to this node
-query = "deploy:any OR deploy:#{node['fqdn']} OR deploy:#{node['ipaddress']}"
-users = [:users, :deployers].collect do |data_bag|
-  # Because the data_bag may not exist, wrap in a safe search
-  begin
-    search(data_bag, query)
-  rescue Net::HTTPServerException
-    []
-  end
-end.flatten
+collections = [:users, :deployers]
+
+if Chef::Config[:solo]
+  users = collections.collect do |bag_name|
+    data_bag(bag_name).map do |name|
+      u = data_bag_item(bag_name, name)
+      !!u['deploy'] ? u : next
+    end
+  end.flatten.compact
+else
+  # SEL users and deployers that can deploy to this node
+  query = "deploy:any OR deploy:#{node['fqdn']} OR deploy:#{node['ipaddress']}"
+  users = collections.collect do |bag_name|
+    # Because the data_bag may not exist, wrap in a safe search
+    begin
+      search(bag_name, query)
+    rescue Net::HTTPServerException
+      []
+    end
+  end.flatten.compact
+end
 
 # TMPL /home/deploy/.ssh/authorized_keys
-template "#{node['deployer']['home']}/.ssh/authorized_keys" do
-  owner     node['deployer']['user']
-  group     node['deployer']['group']
+template "#{deployer['home']}/.ssh/authorized_keys" do
+  owner     deployer['user']
+  group     deployer['group']
   mode      '0644'
   variables :users => users
   source    'authorized_keys.erb'
+end
+
+if deployer['private_key']
+  file "#{deployer['home']}/.ssh/id_rsa" do
+    action :create
+    owner deployer['id']
+    group deployer['gid'] || deployer['id']
+    mode 0600
+    content deployer['private_key']
+  end
+end
+
+if deployer['pub_key']
+  file "#{deployer['home']}/.ssh/id_rsa.pub" do
+    action :create
+    owner deployer['id']
+    group deployer['gid'] || deployer['id']
+    mode 0600
+    content deployer['pub_key']
+  end
 end
