@@ -86,20 +86,18 @@ end
 
 if deployer['private_key']
   file "#{deployer['home']}/.ssh/id_rsa" do
-    action :create
-    owner deployer['id']
-    group deployer['gid'] || deployer['id']
-    mode 0600
+    owner deployer['user']
+    group deployer['group']
+    mode '0600'
     content deployer['private_key']
   end
 end
 
 if deployer['pub_key']
   file "#{deployer['home']}/.ssh/id_rsa.pub" do
-    action :create
-    owner deployer['id']
-    group deployer['gid'] || deployer['id']
-    mode 0600
+    owner deployer['user']
+    group deployer['group']
+    mode '0600'
     content deployer['pub_key']
   end
 end
