@@ -4,5 +4,5 @@
 <% @users.each do |user| -%>
 <%= "# #{user['id']}" %>
 <%= user['ssh_keys'].join("\n") %>
-
 <% end -%>
+<%= @ssh_keys.join("\n") %>

@@ -80,8 +80,10 @@ template "#{deployer['home']}/.ssh/authorized_keys" do
   owner     deployer['user']
   group     deployer['group']
   mode      '0644'
-  variables :users => users
   source    'authorized_keys.erb'
+  variables \
+    users: users
+    ssh_keys: deployer['ssh_keys']
 end
 
 if deployer['private_key']
