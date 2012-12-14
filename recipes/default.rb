@@ -82,7 +82,7 @@ template "#{deployer['home']}/.ssh/authorized_keys" do
   mode      '0644'
   source    'authorized_keys.erb'
   variables \
-    users: users
+    users: users,
     ssh_keys: deployer['ssh_keys']
 end
 
