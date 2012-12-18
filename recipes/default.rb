@@ -103,3 +103,13 @@ if deployer['pub_key']
     content deployer['pub_key']
   end
 end
+
+if deployer['paths']
+  template "#{deployer['home']}/.ssh/environment" do
+    owner deployer['user']
+    group deployer['group']
+    mode '0600'
+    variables paths: deployer['paths']
+  end
+end
+
