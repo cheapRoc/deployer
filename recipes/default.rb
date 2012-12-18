@@ -106,6 +106,7 @@ end
 
 if deployer['paths']
   template "#{deployer['home']}/.ssh/environment" do
+    source 'environment.erb'
     owner deployer['user']
     group deployer['group']
     mode '0600'
