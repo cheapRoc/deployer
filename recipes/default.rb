@@ -119,6 +119,7 @@ if node['deployer'] && node['deployer']['github']
   execute "ssh -o StrictHostKeyChecking=no -T git@github.com" do
     user deployer['user']
     group deployer['group']
+    returns [0, 1]
     only_if { not File.exist? File.expand_path('~/.ssh/known_hosts') }
   end
 end
