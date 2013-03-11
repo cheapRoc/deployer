@@ -120,7 +120,7 @@ if node['deployer'] && node['deployer']['github']
     user deployer['user']
     group deployer['group']
     returns [0, 1]
-    only_if { not File.exist? File.expand_path('~/.ssh/known_hosts') }
+    only_if { not File.exist? File.expand_path("/home/#{deployer['user']}/.ssh/known_hosts") }
   end
 end
 
