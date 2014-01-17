@@ -83,7 +83,8 @@ template "#{deployer['home']}/.ssh/authorized_keys" do
   source    'authorized_keys.erb'
   variables \
     users: users,
-    ssh_keys: deployer['ssh_keys']
+    ssh_keys: deployer['ssh_keys'],
+    fqdn: node['fqdn']
 end
 
 if deployer['private_key']
